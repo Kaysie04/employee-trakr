@@ -1,7 +1,27 @@
 const inquirer = require('inquirer')
 const cTable = require('console.table')
-const db = require('/db')
-const connection = require('connection.js')
+const mysql = require('mysql')
+// const db = require('./db')
+// const connection = require('./db/connection')
+ 
+
+const connection = mysql.createConnection(
+    {
+        host: '192.168.1.6',
+        // your MySQL username,
+        user: 'root',
+        // your MySQL password
+        password: 'Milo04022021!',
+        database: 'company'
+    }
+)
+
+connection.connect(function(err) {
+    if (err) {
+        return console.error('error: ' + err.message);
+    }
+    console.log('connected to mysql server')
+})
 
 // Create an array of questions for user input
 const userPrompt = () => {
@@ -25,7 +45,7 @@ const userPrompt = () => {
         // add department
         {
             type: "input",
-            name: "addDepartment",
+            name: "addDept",
             message: "What is the name of the department?"
         },
 
@@ -44,14 +64,14 @@ const userPrompt = () => {
 
         {
             type: "input",
-            name: "addRoleDepartment",
+            name: "addRoleDept",
             message: "Which department does the role belong to?"
         },
         
         // add employee
         {
             type: "input",
-            name: "addEmployeeNameFirstName",
+            name: "addEmployeeFirstName",
             message: "What is the employee's first name?"
         },
         {
@@ -107,20 +127,20 @@ const userPrompt = () => {
         }
     ])
 
-    .then ((res) => {
+    .then ((answers) => {
         let order = res.selection;
         switch(order) {
             case 'View All Departments':
-                viewDeps()
+                viewDepts()
                 break;
             case 'View All Roles':
                 viewRoles()
                 break;
             case 'View All Employees':
-                viewEmployess()
+                viewEmployees()
                     break;
             case 'Add a Department':
-                addDepartment()
+                addDept()
                 break;
             case 'Add a Role':
                 addRole()
@@ -138,9 +158,63 @@ const userPrompt = () => {
     })
  }
 
- function viewDeps () {
-    db.
+
+ // view all departments
+ viewDepts = () => {
+    const sql = 
+    `SELECT id, department_name AS department 
+    FROM department;
+    `
  }
+
+// view all roles
+viewRoles = () => {
+    `const sql = SELECT role.id, title, salary, department_name AS department
+    FROM role
+    INNER JOIN department ON role.department_id = department.id;
+
+    //
+    `
+} 
+
+// view all employees 
+viewEmployees = () => {
+   `SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, 
+   department.department_name AS department, manager.first_name AS manager
+   FROM employee
+   LEFT JOIN role ON employee.role_id = role.id
+   LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON manager.id = employee.manager_id` 
+}
+
+
+// add new dept
+addDept = () => {
+    `INSERT INTO department
+    (department_name)
+    VALUES (?);`
+}
+
+// add new role 
+addRole = () => {
+    `INSERT INTO role 
+    (title, salary, department_id)
+    VALUES (?);`
+}
+
+addEmployee = () => {
+   ` INSERT INTO employee
+    (first_name, last_name, role_id, manager_id)
+    VALUES (?);`
+}
+
+updateRole = () => {
+    `UPDATE role
+    SET 
+    WHERE`
+}
+
+
+
 
 
 
