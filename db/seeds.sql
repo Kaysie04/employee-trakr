@@ -1,4 +1,5 @@
-USE company;
+
+SET FOREIGN_KEY_CHECKS=0;
 
 INSERT INTO department
   (department_name)
