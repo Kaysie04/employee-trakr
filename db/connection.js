@@ -6,8 +6,9 @@ const connection = mysql.createConnection(
         // your MySQL username,
         user: 'root',
         // your MySQL password
-        password: 'Milo04022021!',
-        database: 'company'
+        password: 'milonaries',
+        database: 'company',
+        socketPath: '/tmp/mysql.sock'
     }
 )
 

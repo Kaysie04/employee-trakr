@@ -1,6 +1,6 @@
 const inquirer = require('inquirer')
 const cTable = require('console.table')
-const mysql = require('mysql')
+const mysql = require('mysql2')
 require('dotenv').config();
 // const db = require('./db')
 // const connection = require('./db/connection')
@@ -8,12 +8,13 @@ require('dotenv').config();
 
 const connection = mysql.createConnection(
     {
-        host: '192.168.1.6',
+        host: '127.0.0.1',
         // your MySQL username,
         user: process.env.DB_USER,
         // your MySQL password
         password: process.env.DB_PASSWORD,
-        database: 'company'
+        database: 'company',
+        socketPath: '/tmp/mysql.sock'
     }
 )
 
@@ -23,7 +24,7 @@ connection.connect(function(err) {
     }
     console.log('connected to mysql server')
 })
-
+//console.log(connection)
 // Create an array of questions for user input
 
 const userPrompt = () => {
@@ -46,7 +47,7 @@ const userPrompt = () => {
     ])
 
     .then ((answers) => {
-        let question = res.selection;
+        let question =  answers.selection;
         switch(question) {
             case 'View All Departments':
                 viewDepts()
@@ -77,35 +78,39 @@ const userPrompt = () => {
  }
 
 
-    // view all departments
+   // view all departments
 
     viewDepts = () => {
-        const sql = 
-        `SELECT id, department_name AS department FROM department`;
-        connection.promise().query(sql, (err, rows) =>{
+        const sql = `SELECT id, department_name AS department FROM department`;
+        connection.promise().query(sql)
+        .then ((rows) => {
+            console.table(rows[0])
+            userPrompt()
+        }) 
+        .catch((err) => {
             if (err) {
             throw err
-            } 
-            console.table(rows)
-            userPrompt()
-        })
-        
+            }          
+        })       
     }
 
     // view all roles
 
     viewRoles = () => {
-        const sql = `SELECT role.id, title, salary, department_name AS department \
-        FROM role \
+        const sql = `SELECT role.id, title, salary, department_name AS department
+        FROM role 
         INNER JOIN department ON role.department_id = department.id`;
-        connection.promise().query(sql, (err, rows) =>{
+        connection.promise().query(sql)
+        .then((rows)=> {
+            console.table(rows[0])
+            userPrompt()
+        })
+        .catch((err) => {
             if (err) {
             throw err
             } 
-            console.table(rows)
-            userPrompt()
-        })
-        
+            
+         })  
     } 
 
     // view all employees 
@@ -116,13 +121,17 @@ const userPrompt = () => {
     FROM employee 
     LEFT JOIN role ON employee.role_id = role.id
     LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON manager.id = employee.manager_id` ;
-    connection.promise().query(sql, (err, rows) =>{
-        if (err) {
-        throw err
-        } 
-        console.table(rows)
-        userPrompt()
-    })
+    connection.promise().query(sql)
+        .then((rows) => {
+            console.table(rows[0])
+            userPrompt()
+        })
+        .catch((err) => {
+            if (err) {
+            throw err
+            } 
+            
+        })  
     }
 
 
@@ -136,8 +145,19 @@ const userPrompt = () => {
                 message: "What is the name of the department?"
             },
         ])
+            .then ((answer) => {
             const sql = `INSERT INTO department (department_name) VALUES (?)`;
-    
+            connection.promise().query(sql, answer.addDept)
+            .then(()=> {
+                console.log(`${answer.addDept} department has been added`)
+                viewDepts()
+            })
+            .catch((err) => {
+                if (err) {
+                throw err
+                } 
+        })      
+    })
     }
 
 
@@ -163,8 +183,21 @@ const userPrompt = () => {
         }
     ])
 
-    const sql = `INSERT INTO role (title, salary, department_id) VALUES (?)`;
-    }
+        .then((answer) => {
+            const sql = `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`;
+            const newValues = [answer.addRole, answer.addRoleSalary, answer.addRoleDept]
+            connection.promise().query(sql, newValues)
+            .then(()=> {
+                console.log(`${answer.addRole} role has been added`)
+                viewRoles()
+            })
+            .catch((err) => {
+                if (err) {
+                throw err
+                }
+        })
+
+    })}
 
     // add new employee
     
@@ -172,12 +205,12 @@ const userPrompt = () => {
         inquirer.prompt([
             {
                 type: "input",
-                name: "addEmployeeFirstName",
+                name: "addEmployeeFN",
                 message: "What is the employee's first name?"
             },
             {
                 type: "input",
-                name: "addEmployeeLastName",
+                name: "addEmployeeLN",
                 message: "What is the employees's last name?"
             },
             {
@@ -187,57 +220,58 @@ const userPrompt = () => {
             },
 
             {
-                type: "list",
-                name: "addEmployeeRole",
-                message: "Who is the employees manager?",
-                choices: [
-                    "Kaysie Anderson",
-                    "Temple Kramer",
-                    "Josie Sparling",
-                    "Caitlin Parsons",
-                    "Todd Holley"
-                ]
+                type: "input",
+                name: "addEmployeeManager",
+                message: "Who is the employees manager? Kaysie Anderson, Temple Kramer, Josie Sparling,  Caitlin Parsons, or Todd Holley"
             }
         ])
-    const sql =  `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?)`;
+
+        .then((answer) => {
+            const sql =  `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
+            const newValues = [answer.addEmployeeFN, answer.addEmployeeLN, answer.addEmployeeRole, answer.addEmployeeManager]
+            connection.promise().query(sql, newValues)
+        .then(()=> {
+        console.log(`${answer.addEmployeeFN} ${answer.addEmployeeLN} has been added as an employee`)
+        viewEmployees()
+            })
+            .catch((err) => {
+                if (err) {
+                throw err
+                }
+            })
+        })
+ 
     }
 
     updateEmployeeRole = () => {
         inquirer.prompt([
-            {
-                type: "list",
-                name: "updateEmployee",
-                message: "Which employee's role do you want to update?",
-                choices: [
-                    "Kaysie Anderson",
-                    "Temple Kramer",
-                    "Josie Sparling",
-                    "Caitlin Parsons",
-                    "Todd Holley"
-                ]
-            },
+         
 
             {
-                type: "list",
+                type: "input",
                 name: "updateEmployeeRole",
-                message: "Which role do you want to assign the selected employee?",
-                choices: [
-                "HR Rep",
-                "Social Media Rep",
-                "Sales Rep",
-                "Shipping Manager",
-                "Cashier"
-                ]
+                message: "Which role do you want to assign the selected employee: HR Rep, Social Media Rep, Sales Rep, Shipping Manager, or Cashier?"
+            },
+            {
+                type: "input",
+                name: "updateEmployee",
+                message: "Which employee's role do you want to update: Kaysie Anderson, Temple Kramer, Josie Sparling, Caitlin Parsons, or Todd Holley"
             }
         ])
-        const sql = 
-        `UPDATE role SET WHERE`
+        .then((answer) => {
+            const sql =  `UPDATE employee SET role_id = (?) WHERE id = (?)`
+            const newValues = [answer.updateEmployeeRole, answer.updateEmployee,]
+            connection.promise().query(sql, newValues)
+        .then(()=> {
+        console.log("Employee's role has been updated")
+        viewEmployees()
+            })
+            .catch((err) => {
+                if (err) {
+                throw err
+                }
+            })
+        })
     }
 
-
-
-
  userPrompt()
-
-
- 

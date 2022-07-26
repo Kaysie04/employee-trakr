@@ -1,5 +1,5 @@
 
-SET FOREIGN_KEY_CHECKS=0;
+USE company;
 
 INSERT INTO department
   (department_name)
@@ -22,8 +22,8 @@ VALUES
 INSERT INTO employee
 (first_name, last_name, role_id, manager_id)
 VALUES
-('Kaysie', 'Anderson', 1, 1),
-('Temple', 'Kramer', 2, 3),
+('Kaysie', 'Anderson', 1, NULL),
+('Temple', 'Kramer', 2, 1),
 ('Caitlin', 'Parsons', 3, 2),
 ('Josie', 'Sparling', 4, NULL),
 ('Todd', 'Holley', 5, 1);
