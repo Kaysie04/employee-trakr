@@ -41,7 +41,8 @@ const userPrompt = () => {
                 'Add a Department',
                 'Add a Role',
                 'Add an Employee',
-                'Update an Employee Role'
+                'Update an Employee Role',
+                'I want to exit the program'
             ]
         }
     ])
@@ -69,6 +70,9 @@ const userPrompt = () => {
                 break;
             case 'Update an Employee Role':
                 updateEmployeeRole()
+                break;
+            case 'I want to exit the program':
+                exitConnection()
                 break;
 
             default:
@@ -222,7 +226,7 @@ const userPrompt = () => {
             {
                 type: "input",
                 name: "addEmployeeManager",
-                message: "Who is the employees manager? Kaysie Anderson, Temple Kramer, Josie Sparling,  Caitlin Parsons, or Todd Holley"
+                message: "Who is the employees manager?"
             }
         ])
 
@@ -250,12 +254,12 @@ const userPrompt = () => {
             {
                 type: "input",
                 name: "updateEmployeeRole",
-                message: "Which role do you want to assign the selected employee: HR Rep, Social Media Rep, Sales Rep, Shipping Manager, or Cashier?"
+                message: "Which role do you want to assign the selected employee:"
             },
             {
                 type: "input",
                 name: "updateEmployee",
-                message: "Which employee's role do you want to update: Kaysie Anderson, Temple Kramer, Josie Sparling, Caitlin Parsons, or Todd Holley"
+                message: "Which employee's role do you want to update:"
             }
         ])
         .then((answer) => {
@@ -272,6 +276,10 @@ const userPrompt = () => {
                 }
             })
         })
+    }
+
+    exitConnection = () => {
+        connection.end()
     }
 
  userPrompt()
